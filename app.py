@@ -3,6 +3,16 @@ from tkinter import filedialog
 from PyPDF2 import PdfReader
 from script.extraction import category_dict
 
+import os
+import openai
+openai.api_type = "azure"
+openai.api_base = "https://chalmers-mit-openai.openai.azure.com/"
+openai.api_version = "2023-05-15"
+
+with(open('openai.key')) as f:
+    openai.api_key = f.read().strip()
+
+
 cats = {}
 
 def browse_file():
@@ -38,21 +48,36 @@ chat_window.pack(expand=True, fill=tk.BOTH)
 input_box = tk.Entry(window)
 input_box.pack(side=tk.BOTTOM, fill=tk.X)
 
+# Initialize a conversation
+conversation = [
+    {"role": "system", "content": "You are a helpful teacher that will assist students with questions regarding information in a given textbook. Your answer should be short and concise while still being informational."}
+]
+
 def send_message(event=None):
     message = input_box.get()
     if message:
         chat_window.insert(tk.END, f"You: {message}\n")
-        if not cats:
-            print('unlucky')
-            return
-        pages = []
-        for key, value in cats.items():
-            if key in message.lower():
-                pages += value
-        chat_window.insert(tk.END, f"Found category: {pages}\n")
-        
         input_box.delete(0, tk.END)
         chat_window.yview_moveto(1.0)  # Scroll down to the latest content
+
+        # Add user message to conversation
+        conversation.append({"role": "user", "content": message})
+
+        # Generate model response
+        response = openai.ChatCompletion.create(
+            engine="gpt-35-turbo",
+            messages=conversation
+        )
+
+         # Get assistant's reply from the response
+        assistant_reply =  response['choices'][0]['message']['content']
+
+        chat_window.insert(tk.END, f"Assistant: {assistant_reply}\n")
+        chat_window.yview_moveto(1.0)  # Scroll down to the latest content
+
+        # Add assistant message to conversation
+        conversation.append({"role": "assistant", "content": assistant_reply})
+                
 
 # Bind the Enter key to the send_message function
 window.bind("<Return>", send_message)
