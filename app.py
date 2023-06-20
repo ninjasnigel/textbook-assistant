@@ -8,8 +8,10 @@ import os
 import openai
 import script.embedding as embedding
 openai.api_type = "azure"
-openai.api_base = "https://chalmers-mit-openai.openai.azure.com/"
 openai.api_version = "2023-05-15"
+
+with open('openai.base') as f:
+    openai.api_base = f.read().strip()
 
 with open('openai.key') as f:
     openai.api_key = f.read().strip()
