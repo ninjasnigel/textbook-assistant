@@ -25,11 +25,11 @@ with(open('openai.key')) as f:
 with(open('openai.base')) as f:
     openai.api_base = f.read().strip()
 
-def create_embedding(file):
+def create_embedding(filepath):
     #Note: The openai-python library support for Azure OpenAI is in preview.
     from PyPDF2 import PdfReader
-    pdf_file = "example2"
-    reader = PdfReader(pdf_file+".pdf")
+    filename = filepath.split("/")[-1].replace(".pdf", "")
+    reader = PdfReader(filename+".pdf")
     number_of_pages = len(reader.pages)
     pages = [page.extract_text() for page in reader.pages]
 
@@ -47,6 +47,7 @@ def create_embedding(file):
         embeddings.extend(batch_embeddings)
 
     df = pd.DataFrame({"text": pages, "embedding": embeddings})
+    df.to_csv(f"data/{filename}.csv", index=False)
     return df
 
 def get_embedding(filepath):
@@ -57,14 +58,10 @@ def get_embedding(filepath):
         print(filepath)
         df = pd.read_csv(f"data/{filename}.csv")
         print("Embedding found")
+        return df
     except FileNotFoundError as e:
-        print(e)
-        print("No embedding found, creating new one")
-        df = create_embedding(filepath)
-        df.to_csv(f"data/{filename}.csv", index=False)
-        print("Created and saved embeddings for", filename, "!!!!!!!!!!!!!")
-
-    df['embedding'].apply(ast.literal_eval)
+        print("No embedding found")
+        return False
 
     return df
 

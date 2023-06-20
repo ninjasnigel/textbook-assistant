@@ -1,18 +1,15 @@
 import tkinter as tk
 from tkinter import filedialog
 from PyPDF2 import PdfReader
+import pandas as pd
 from script.extraction import category_dict
 import ttkthemes
 from ttkthemes import ThemedStyle
 
 import os
 import openai
-<<<<<<< HEAD
 import script.embedding as embedding
-=======
-
-# Set OpenAI API configuration
->>>>>>> 7a7f7e6d88883472ed89963e0780912ef0b0a814
+import ast
 openai.api_type = "azure"
 openai.api_base = "https://chalmers-mit-openai.openai.azure.com/"
 openai.api_version = "2023-05-15"
@@ -20,24 +17,24 @@ openai.api_version = "2023-05-15"
 with open('openai.key') as f:
     openai.api_key = f.read().strip()
 
+df = ""
+
 cats = {}
 
 def browse_file():
-    global cats
+    global df
     filepath = filedialog.askopenfilename()
     if filepath and filepath[-1] == "f":
-        try:
-            chat_window.insert(tk.END, f"Analyzing file: {filepath}...\n", "bold")
-            window.update()
-            embedding.get_embedding(filepath)
-            print("Embedding loaded")
-            window.update_idletasks()
-        except:
-            print("Not a PDF file")
-<<<<<<< HEAD
-=======
-        chat_window.insert(tk.END, f"{len(cats)} categories found\n", "green")
->>>>>>> 7a7f7e6d88883472ed89963e0780912ef0b0a814
+        chat_window.insert(tk.END, f"Analyzing file: {filepath}...\n", "bold")
+        window.update()
+        df = embedding.get_embedding(filepath)
+        if not isinstance(df, pd.DataFrame):
+            df = embedding.create_embedding(filepath)
+            df['embedding'] = df['embedding'].apply(ast.literal_eval)
+        print("Embedding loaded")
+        window.update_idletasks()
+    else:
+        print("Not a PDF file")
 
 # Create the main window
 window = tk.Tk()
@@ -101,6 +98,7 @@ chat_window.yview_moveto(1.0)  # Scroll down to the latest content
 def send_message(event=None):
     message = input_box.get()
     if message:
+        embedding.strings_ranked_by_relatedness(message, df)
         chat_window.insert(tk.END, f"You: {message}\n")
         input_box.delete(0, tk.END)
         chat_window.yview_moveto(1.0)  # Scroll down to the latest content
