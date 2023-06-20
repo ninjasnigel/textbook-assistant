@@ -1,0 +1,88 @@
+import os
+import openai
+import pandas as pd
+from scipy import spatial
+openai.api_type = "azure"
+openai.api_version = "2023-05-15"
+EMBEDDING_MODEL = "text-embedding-ada-002"
+
+stop_words = [
+    "a", "an", "the", "this", "that", "these", "those", "some", "any", "every",
+    "all", "both", "either", "neither", "such", "no", "none", "few", "several",
+    "many", "much", "more", "most", "less", "least", "fewer", "fewest", "another",
+    "other", "others", "and", "but", "or", "nor", "so", "yet", "in", "on", "at",
+    "by", "for", "to", "from", "with", "without", "can", "could", "may", "might",
+    "will", "would", "shall", "should", "must", "is", "are", "was", "were", "have",
+    "has", "had", "do", "does", "did", "be", "been", "being", "get", "gets", "got",
+    "getting", "go", "goes", "went", "going", "make", "makes", "made", "making",
+    "take", "takes", "took", "taking", "come", "comes", "came", "coming", "give",
+    "gives", "gave", "giving"
+]
+
+with(open('openai.key')) as f:
+    openai.api_key = f.read().strip()
+
+with(open('openai.base')) as f:
+    openai.api_base = f.read().strip()
+
+def create_embedding(file):
+    #Note: The openai-python library support for Azure OpenAI is in preview.
+    from PyPDF2 import PdfReader
+    pdf_file = "example2"
+    reader = PdfReader(pdf_file+".pdf")
+    number_of_pages = len(reader.pages)
+    pages = [page.extract_text() for page in reader.pages]
+
+    BATCH_SIZE = 1
+
+    embeddings = []
+    for batch_start in range(0, len(pages), BATCH_SIZE):
+        batch_end = batch_start + BATCH_SIZE
+        batch = pages[batch_start:batch_end]
+        print(f"Batch {batch_start} to {batch_end-1}")
+        response = openai.Embedding.create(model=EMBEDDING_MODEL, input=batch, deployment_id=EMBEDDING_MODEL)
+        for i, be in enumerate(response["data"]):
+            assert i == be["index"]  # double check embeddings are in same order as input
+        batch_embeddings = [e["embedding"] for e in response["data"]]
+        embeddings.extend(batch_embeddings)
+
+    import pandas as pd
+    df = pd.DataFrame({"text": pages, "embedding": embeddings})
+    SAVE_PATH = f"data/{pdf_file}.csv"
+    df.to_csv(SAVE_PATH, index=False)
+
+def get_embedding(file):
+    import ast
+    import pandas as pd
+    try:
+        df = pd.read_csv(f"data/{file}.csv")
+    except:
+        print("No embedding found, creating new one")
+        create_embedding(file)
+        df = pd.read_csv(f"data/{file}.csv")
+
+    df['embedding'].apply(ast.literal_eval)
+
+    return df
+
+def strings_ranked_by_relatedness(
+    query: str,
+    df: pd.DataFrame,
+    relatedness_fn=lambda x, y: 1 - spatial.distance.cosine(x, y),
+    top_n: int = 100
+) -> tuple[list[str], list[float]]:
+    """Returns a list of strings and relatednesses, sorted from most related to least."""
+
+    query_embedding_response = openai.Embedding.create(
+        model=EMBEDDING_MODEL,
+        input=query,
+        deployment_id=EMBEDDING_MODEL
+    )
+    query_embedding = query_embedding_response["data"][0]["embedding"]
+    strings_and_relatednesses = [
+        (row["text"], relatedness_fn(query_embedding, row["embedding"]))
+        for i, row in df.iterrows()
+    ]
+    strings_and_relatednesses.sort(key=lambda x: x[1], reverse=True)
+    strings, relatednesses = zip(*strings_and_relatednesses)
+    return strings[:top_n], relatednesses[:top_n]
