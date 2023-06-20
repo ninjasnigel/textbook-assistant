@@ -5,6 +5,7 @@ from script.extraction import category_dict
 
 import os
 import openai
+import script.embedding as embedding
 openai.api_type = "azure"
 openai.api_base = "https://chalmers-mit-openai.openai.azure.com/"
 openai.api_version = "2023-05-15"
@@ -12,24 +13,20 @@ openai.api_version = "2023-05-15"
 with(open('openai.key')) as f:
     openai.api_key = f.read().strip()
 
-
 cats = {}
 
 def browse_file():
     global cats
     filepath = filedialog.askopenfilename()
-    if filepath:
+    if filepath and filepath[-1] == "f":
         try:
             chat_window.insert(tk.END, f"Analyzing file: {filepath}...\n")
             window.update()
-            reader = PdfReader(filepath)
-            cats = category_dict(reader.pages)
+            embedding.get_embedding(filepath)
+            print("Embedding loaded")
             window.update_idletasks()
-            for key, value in cats.items():
-                print(f'{key}: {value}')
         except:
             print("Not a PDF file")
-        chat_window.insert(tk.END, f"{len(cats)} categories found\n")
 
 # Create the main window
 window = tk.Tk()

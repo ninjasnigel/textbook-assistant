@@ -46,20 +46,23 @@ def create_embedding(file):
         batch_embeddings = [e["embedding"] for e in response["data"]]
         embeddings.extend(batch_embeddings)
 
-    import pandas as pd
     df = pd.DataFrame({"text": pages, "embedding": embeddings})
-    SAVE_PATH = f"data/{pdf_file}.csv"
-    df.to_csv(SAVE_PATH, index=False)
+    return df
 
-def get_embedding(file):
+def get_embedding(filepath):
     import ast
     import pandas as pd
+    filename = filepath.split("/")[-1].replace(".pdf", "")
     try:
-        df = pd.read_csv(f"data/{file}.csv")
-    except:
+        print(filepath)
+        df = pd.read_csv(f"data/{filename}.csv")
+        print("Embedding found")
+    except FileNotFoundError as e:
+        print(e)
         print("No embedding found, creating new one")
-        create_embedding(file)
-        df = pd.read_csv(f"data/{file}.csv")
+        df = create_embedding(filepath)
+        df.to_csv(f"data/{filename}.csv", index=False)
+        print("Created and saved embeddings for", filename, "!!!!!!!!!!!!!")
 
     df['embedding'].apply(ast.literal_eval)
 
