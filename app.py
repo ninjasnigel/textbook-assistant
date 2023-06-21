@@ -31,7 +31,7 @@ def browse_file():
         df = embedding.get_embedding(filepath)
         if not isinstance(df, pd.DataFrame):
             df = embedding.create_embedding(filepath)
-            df['embedding'] = df['embedding'].apply(ast.literal_eval)
+        df['embedding'] = df['embedding'].apply(ast.literal_eval)
         print("Embedding loaded")
         window.update_idletasks()
     else:
@@ -46,24 +46,32 @@ window, chat_window, input_box = configure_window(window,browse_file)
 
 # Initialize a conversation
 conversation = [
-    {"role": "system", "content": "You are a helpful teacher that will assist students with questions regarding information in a given textbook. Your answer should be short and concise while still being informational."},
+    {"role": "system", "content": "You are a helpful teacher that will assist students with questions regarding information in a given textbook. Your answer should be short and concise while still being informational. You will have context from a textbook the student is using. The questions will come after ####"},
     {"role": "assistant", "content": "Hello, I am a helpful teacher that will assist you with questions regarding information in a given textbook. Please browse your computer for a textbook to input and ask me anything related to it. :)"}
 ]
 # Print the first assistant message
 first_assistant_message = conversation[1]["content"]
 chat_window.insert(tk.END, f"Assistant: {first_assistant_message}\n")
 chat_window.yview_moveto(1.0)  # Scroll down to the latest content
+helpmessage = "Use the following pages from a textbook to answer the subsequent questions: \n"
 
 def send_message(event=None):
+    global df
+    global cats
+    global conversation
+    global openai
+    global helpmessage
     message = input_box.get()
     if message:
-        embedding.strings_ranked_by_relatedness(message, df)
-        chat_window.insert(tk.END, f"You: {message}\n")
         input_box.delete(0, tk.END)
+        window.update()
+        pages, relatedness = embedding.strings_ranked_by_relatedness(message, df, top_n=5)
+        prompt = helpmessage + ' ||| '.join(pages) + ' #### ' + message
+        chat_window.insert(tk.END, f"You: {message}\n")
         chat_window.yview_moveto(1.0)  # Scroll down to the latest content
 
         # Add user message to conversation
-        conversation.append({"role": "user", "content": message})
+        conversation.append({"role": "user", "content": prompt})
 
         # Print loading indicator
         chat_window.insert(tk.END, "Assistant: Thinking...\n", "italic")
