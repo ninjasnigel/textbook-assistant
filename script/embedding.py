@@ -65,6 +65,9 @@ def get_embedding(filepath):
 
     return df
 
+
+
+# search function
 def strings_ranked_by_relatedness(
     query: str,
     df: pd.DataFrame,
@@ -72,7 +75,7 @@ def strings_ranked_by_relatedness(
     top_n: int = 100
 ) -> tuple[list[str], list[float]]:
     """Returns a list of strings and relatednesses, sorted from most related to least."""
-
+    import ast
     query_embedding_response = openai.Embedding.create(
         model=EMBEDDING_MODEL,
         input=query,
@@ -86,3 +89,4 @@ def strings_ranked_by_relatedness(
     strings_and_relatednesses.sort(key=lambda x: x[1], reverse=True)
     strings, relatednesses = zip(*strings_and_relatednesses)
     return strings[:top_n], relatednesses[:top_n]
+
