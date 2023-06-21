@@ -22,13 +22,21 @@ def configure_window(window, browse_file):
     style.theme_use("yaru")  # Modern dark theme
 
     # Define colors and styles
+<<<<<<< HEAD
     window.configure(bg="#2d2d2d")
     window.title('My Application') # Add a title to your window
+=======
+>>>>>>> 21ffc1db525e264b82e2441b1ce6725ff8568ab9
     window.option_add("*Font", "Arial 12")
     window.option_add("*TButton.font", "Arial 12")
     window.option_add("*Text.font", "Arial 12")
+<<<<<<< HEAD
     window.option_add("*Text.background", "#2d2d2d")
     window.option_add("*Text.foreground", "#f0f0f0")
+=======
+    window.option_add("*Text.background", "#f8f8f8")
+    window.option_add("*Text.foreground", "#333333")
+>>>>>>> 21ffc1db525e264b82e2441b1ce6725ff8568ab9
     window.option_add("*Text.wrap", "word")
     window.option_add("*TEntry.font", "Arial 12")
 

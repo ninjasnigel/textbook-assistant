@@ -14,6 +14,7 @@ import tiktoken
 
 openai.api_type = "azure"
 openai.api_version = "2023-05-15"
+GPT_MODEL_token = "gpt-3.5-turbo"
 GPT_MODEL = "gpt-35-turbo"
 
 with open('openai.base') as f:
@@ -48,9 +49,10 @@ window.title("File Browser and Chat")
 # Configure the window using the imported function
 window, chat_window, input_box = configure_window(window,browse_file)
 
-def num_tokens(text: str, model: str = GPT_MODEL) -> int:
+# Get number of tokens in a string
+def num_tokens(text: str, model: str = GPT_MODEL_token) -> int:
     """Return the number of tokens in a string."""
-    encoding = tiktoken.get_encoding(model)
+    encoding = tiktoken.encoding_for_model(model)
     return len(encoding.encode(text))   
 
 
@@ -87,7 +89,7 @@ def send_message(event=None):
 
         conversation.append({"role": "user", "content": prompt})
 
-        while num_tokens(total_msg, model=GPT_MODEL) > token_budget:
+        while num_tokens(total_msg) > token_budget:
             # Remove oldest message if token budget is exceeded
             conversation.pop(2)
 
