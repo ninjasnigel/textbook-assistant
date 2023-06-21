@@ -23,7 +23,7 @@ with open('openai.base') as f:
 with open('openai.key') as f:
     openai.api_key = f.read().strip()
 
-df = ""
+df = pd.DataFrame()
 
 cats = {}
 
@@ -64,7 +64,7 @@ conversation = [
 ]
 # Print the first assistant message
 first_assistant_message = conversation[1]["content"]
-chat_window.insert(tk.END, f"Assistant: {first_assistant_message}\n")
+chat_window.insert(tk.END, f"Assistant: {first_assistant_message}\n", "assistant")  # Apply "assistant" tag to assistant message
 chat_window.yview_moveto(1.0)  # Scroll down to the latest content
 helpmessage = "Use the following pages from a textbook to answer the subsequent questions: \n"
 
@@ -78,9 +78,11 @@ def send_message(event=None):
     if message:
         input_box.delete(0, tk.END)
         window.update()
-        pages, relatedness = embedding.strings_ranked_by_relatedness(message, df, top_n=5)
+        pages = []
+        if not df.empty:
+            pages, relatedness = embedding.strings_ranked_by_relatedness(message, df, top_n=5)
         prompt = helpmessage + ' ||| '.join(pages) + delimiter + message
-        chat_window.insert(tk.END, f"You: {message}\n")
+        chat_window.insert(tk.END, f"You: {message}\n", "user")  # Apply "user" tag to user message
         chat_window.yview_moveto(1.0)  # Scroll down to the latest content
 
         conversation.append({"role": "user", "content": prompt})
@@ -95,7 +97,7 @@ def send_message(event=None):
             total_msg = " ".join([entry["content"] for entry in conversation])
 
         # Print loading indicator
-        chat_window.insert(tk.END, "Assistant: Thinking...\n", "italic")
+        chat_window.insert(tk.END, "Assistant: Thinking...\n", "assistant")  # Apply "assistant" tag to assistant message
         chat_window.yview_moveto(1.0)  # Scroll down to the latest content
         chat_window.update()
         # Generate model response
@@ -110,7 +112,7 @@ def send_message(event=None):
         # Remove loading indicator
         chat_window.delete("end-2l linestart", tk.END)
 
-        chat_window.insert(tk.END, f"\nAssistant: {assistant_reply}\n")
+        chat_window.insert(tk.END, f"\nAssistant: {assistant_reply}\n", "assistant")  # Apply "assistant" tag to assistant message
         chat_window.yview_moveto(1.0)  # Scroll down to the latest content
 
         # Add assistant message to conversation
