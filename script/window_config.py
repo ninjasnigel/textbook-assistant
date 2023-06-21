@@ -23,11 +23,10 @@ def configure_window(window, browse_file):
     style.theme_use("clam")  # Example theme name
 
     # Define colors and styles
-    window.configure(bg="#f0f0f0")
     window.option_add("*Font", "Arial 12")
     window.option_add("*Button.font", "Arial 12")
     window.option_add("*Text.font", "Arial 12")
-    window.option_add("*Text.background", "#ffffff")
+    window.option_add("*Text.background", "#f8f8f8")
     window.option_add("*Text.foreground", "#333333")
     window.option_add("*Text.wrap", "word")
     window.option_add("*Entry.font", "Arial 12")
