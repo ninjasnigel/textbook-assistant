@@ -42,6 +42,7 @@ def configure_window(window, browse_file):
     chat_window.pack(padx=10, pady=10, expand=True, fill=tk.BOTH)
     chat_window.tag_configure("user", foreground="#88c0d0")  # Blue user messages, right-aligned
     chat_window.tag_configure("assistant", foreground="#a3be8c")  # Green assistant messages, left-aligned
+    chat_window.tag_configure("error", foreground="#ff0000")  # Bright red error messages
 
 
     # Create an input box in the chat window
@@ -49,6 +50,8 @@ def configure_window(window, browse_file):
     input_box.pack(side=tk.BOTTOM, fill=tk.X, padx=20, pady=10)  # Added padding inside the widget
     input_box.insert(0, 'Enter your message...')  # Placeholder text
     input_box.bind("<FocusIn>", clear_placeholder)  # Bind the clear_placeholder function to focus event
+
+    
     
     # Example of text widget scrollbar configuration
     scrollbar = ttk.Scrollbar(chat_window)
