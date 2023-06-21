@@ -23,7 +23,7 @@ with open('openai.base') as f:
 with open('openai.key') as f:
     openai.api_key = f.read().strip()
 
-df = ""
+df = pd.DataFrame()
 
 cats = {}
 
@@ -78,7 +78,9 @@ def send_message(event=None):
     if message:
         input_box.delete(0, tk.END)
         window.update()
-        pages, relatedness = embedding.strings_ranked_by_relatedness(message, df, top_n=5)
+        pages = []
+        if not df.empty:
+            pages, relatedness = embedding.strings_ranked_by_relatedness(message, df, top_n=5)
         prompt = helpmessage + ' ||| '.join(pages) + delimiter + message
         chat_window.insert(tk.END, f"You: {message}\n", "user")  # Apply "user" tag to user message
         chat_window.yview_moveto(1.0)  # Scroll down to the latest content
