@@ -48,9 +48,10 @@ window.title("File Browser and Chat")
 # Configure the window using the imported function
 window, chat_window, input_box = configure_window(window,browse_file)
 
+# Get number of tokens in a string
 def num_tokens(text: str, model: str = GPT_MODEL) -> int:
     """Return the number of tokens in a string."""
-    encoding = tiktoken.get_encoding(model)
+    encoding = tiktoken.encoding_for_model(model)
     return len(encoding.encode(text))   
 
 
