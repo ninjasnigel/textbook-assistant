@@ -20,6 +20,7 @@ def configure_window(window, browse_file):
     # Apply a theme
     style = ThemedStyle(window)
     style.theme_use("yaru")  # Modern dark theme
+    style.configure("TEntry", padding=10)  # Increase the entry box padding
 
     # Define colors and styles
     window.configure(bg="#2d2d2d")
@@ -39,17 +40,16 @@ def configure_window(window, browse_file):
     # Create a chat window using a text widget
     chat_window = tk.Text(window, height=20, width=60, bg="#2d2d2d", fg="#f0f0f0", padx=10, pady=10)  # Added padding inside the widget
     chat_window.pack(padx=10, pady=10, expand=True, fill=tk.BOTH)
-    chat_window.tag_configure("bold", font=("Arial", 12, "bold"))
-    chat_window.tag_configure("green", foreground="#008000")
+    chat_window.tag_configure("user", foreground="#88c0d0")  # Blue user messages, right-aligned
+    chat_window.tag_configure("assistant", foreground="#a3be8c")  # Green assistant messages, left-aligned
+
 
     # Create an input box in the chat window
     input_box = ttk.Entry(window)
     input_box.pack(side=tk.BOTTOM, fill=tk.X, padx=20, pady=10)  # Added padding inside the widget
     input_box.insert(0, 'Enter your message...')  # Placeholder text
     input_box.bind("<FocusIn>", clear_placeholder)  # Bind the clear_placeholder function to focus event
-
-    style.configure("TEntry", padding=10)
-
+    
     # Example of text widget scrollbar configuration
     scrollbar = ttk.Scrollbar(chat_window)
     scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
