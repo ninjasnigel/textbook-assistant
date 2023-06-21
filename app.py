@@ -69,6 +69,7 @@ def send_message(event=None):
         chat_window.insert(tk.END, "Assistant: Thinking...\n", "italic")
         chat_window.yview_moveto(1.0)  # Scroll down to the latest content
         chat_window.update()
+        
         # Generate model response
         response = openai.ChatCompletion.create(
             engine="gpt-35-turbo",
