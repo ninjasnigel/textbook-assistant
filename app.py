@@ -83,15 +83,16 @@ def send_message(event=None):
         chat_window.insert(tk.END, f"You: {message}\n")
         chat_window.yview_moveto(1.0)  # Scroll down to the latest content
 
-        # Add user message to conversation
-        total_msg = " ".join([entry["content"] for entry in conversation])
-        token_budget: int = 8192 - 500  # Leave 500 tokens for the system message
-
         conversation.append({"role": "user", "content": prompt})
+
+        # Add user message to conversation
+        token_budget: int = 8192 - 500  # Leave 500 tokens for the system message
+        total_msg = " ".join([entry["content"] for entry in conversation])
 
         while num_tokens(total_msg) > token_budget:
             # Remove oldest message if token budget is exceeded
             conversation.pop(2)
+            total_msg = " ".join([entry["content"] for entry in conversation])
 
         # Print loading indicator
         chat_window.insert(tk.END, "Assistant: Thinking...\n", "italic")
