@@ -9,8 +9,12 @@ import os
 import openai
 import script.embedding as embedding
 import ast
+import tiktoken
+
+
 openai.api_type = "azure"
 openai.api_version = "2023-05-15"
+GPT_MODEL = "gpt-35-turbo"
 
 with open('openai.base') as f:
     openai.api_base = f.read().strip()
@@ -44,9 +48,16 @@ window.title("File Browser and Chat")
 # Configure the window using the imported function
 window, chat_window, input_box = configure_window(window,browse_file)
 
+def num_tokens(text: str, model: str = GPT_MODEL) -> int:
+    """Return the number of tokens in a string."""
+    encoding = tiktoken.get_encoding(model)
+    return len(encoding.encode(text))   
+
+
 # Initialize a conversation
+delimiter = "####"
 conversation = [
-    {"role": "system", "content": "You are a helpful teacher that will assist students with questions regarding information in a given textbook. Your answer should be short and concise while still being informational. You will have context from a textbook the student is using. The questions will come after ####"},
+    {"role": "system", "content": "You are a helpful teacher that will assist students with questions regarding information in a given textbook. Your answer should be short and concise while still being informational. You will have context from a textbook the student is using. The questions will come after a delimiter (####)."},
     {"role": "assistant", "content": "Hello, I am a helpful teacher that will assist you with questions regarding information in a given textbook. Please browse your computer for a textbook to input and ask me anything related to it. :)"}
 ]
 # Print the first assistant message
@@ -66,12 +77,19 @@ def send_message(event=None):
         input_box.delete(0, tk.END)
         window.update()
         pages, relatedness = embedding.strings_ranked_by_relatedness(message, df, top_n=5)
-        prompt = helpmessage + ' ||| '.join(pages) + ' #### ' + message
+        prompt = helpmessage + ' ||| '.join(pages) + delimiter + message
         chat_window.insert(tk.END, f"You: {message}\n")
         chat_window.yview_moveto(1.0)  # Scroll down to the latest content
 
         # Add user message to conversation
+        total_msg = " ".join([entry["content"] for entry in conversation])
+        token_budget: int = 8192 - 500  # Leave 500 tokens for the system message
+
         conversation.append({"role": "user", "content": prompt})
+
+        while num_tokens(total_msg, model=GPT_MODEL) > token_budget:
+            # Remove oldest message if token budget is exceeded
+            conversation.pop(2)
 
         # Print loading indicator
         chat_window.insert(tk.END, "Assistant: Thinking...\n", "italic")
@@ -79,7 +97,7 @@ def send_message(event=None):
         chat_window.update()
         # Generate model response
         response = openai.ChatCompletion.create(
-            engine="gpt-35-turbo",
+            engine=GPT_MODEL,
             messages=conversation
         )
 
