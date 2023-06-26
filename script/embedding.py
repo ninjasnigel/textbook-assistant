@@ -19,6 +19,10 @@ stop_words = [
     "gives", "gave", "giving"
 ]
 
+def remove_words(text: str, words: list[str]) -> str:
+    """Remove words from a string."""
+    return " ".join([word for word in text.split() if word not in words])
+
 with(open('openai.key')) as f:
     openai.api_key = f.read().strip()
 
@@ -53,6 +57,7 @@ def create_embedding(filepath):
 def get_embedding(filepath):
     import ast
     import pandas as pd
+    from PyPDF2 import PdfReader
     filename = filepath.split("/")[-1].replace(".pdf", "")
     try:
         print(filepath)
@@ -62,10 +67,6 @@ def get_embedding(filepath):
     except FileNotFoundError as e:
         print("No embedding found")
         return False
-
-    return df
-
-
 
 # search function
 def strings_ranked_by_relatedness(

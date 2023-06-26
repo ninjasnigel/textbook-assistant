@@ -10,7 +10,7 @@ import openai
 import script.embedding as embedding
 import ast
 import tiktoken
-
+import fitz  # PyMuPDF
 
 openai.api_type = "azure"
 openai.api_version = "2023-05-15"
@@ -25,11 +25,19 @@ with open('openai.key') as f:
 
 df = pd.DataFrame()
 
+
+filepath = ""
 cats = {}
+reader = None
 
 def browse_file():
     global df
+    global reader
+    global filepath
+    global filename
     filepath = filedialog.askopenfilename()
+    filename = filepath.split("/")[-1].replace(".pdf", "")
+    reader = PdfReader(filename+".pdf").pages
     if filepath and filepath[-1] == "f":
         chat_window.insert(tk.END, f"Analyzing file: {filepath}...\n", "bold")
         window.update()
@@ -42,7 +50,52 @@ def browse_file():
     else:
         print("Not a PDF file")
 
-# Create the main window
+def get_prompt(usr_msg):
+    global df
+    global cats
+    global helpmessage
+    nr_emb_pages = 5
+    pages = []
+    usr_msg = embedding.remove_words(usr_msg, embedding.stop_words).lower()
+    if "page" in usr_msg:
+        page_nr = first_int_in_string(usr_msg.split("page")[-1])
+        if page_nr != 0:
+            pages.append(f"Page {page_nr}: {get_page_text(page_nr)}")
+            nr_emb_pages -= 1
+    if not df.empty:
+        emb_pages, relatedness = embedding.strings_ranked_by_relatedness(usr_msg, df, top_n=nr_emb_pages)
+        for i in range(len(emb_pages)):
+            pages.append(emb_pages[i])
+        prompt = helpmessage + delimiter.join(pages) + delimiter + usr_msg
+    return prompt
+    
+def first_int_in_string(string):
+    int_string = ""
+    for i in range(len(string)-1):
+        if string[i].isdigit():
+            int_string += string[i]
+        elif int_string != "":
+            return int(int_string)
+    return int(int_string)
+        
+
+def get_first_page():
+    global filename
+    doc = fitz.open(filename+".pdf")
+    for item in doc.get_toc():
+        if item[0] == 2:
+            return item[2]
+    print("first page may not have been found")
+    return 0
+
+def get_page_text(page_nr, filepath=filepath):
+    global reader
+    first_page = get_first_page()
+    print(first_page, page_nr)
+    page = reader[page_nr+first_page-2]
+    print(f"Page {page_nr}: {page.extract_text()}")
+    return page.extract_text()
+
 window = tk.Tk()
 window.title("File Browser and Chat")
 
@@ -78,10 +131,7 @@ def send_message(event=None):
     if message:
         input_box.delete(0, tk.END)
         window.update()
-        pages = []
-        if not df.empty:
-            pages, relatedness = embedding.strings_ranked_by_relatedness(message, df, top_n=5)
-        prompt = helpmessage + ' ||| '.join(pages) + delimiter + message
+        prompt = get_prompt(message)
         chat_window.insert(tk.END, f"You: {message}\n", "user")  # Apply "user" tag to user message
         chat_window.yview_moveto(1.0)  # Scroll down to the latest content
 
