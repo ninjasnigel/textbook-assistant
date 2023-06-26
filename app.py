@@ -11,6 +11,7 @@ import script.embedding as embedding
 from script.window_config import get_slider_value
 import ast
 import tiktoken
+import re
 import fitz  # PyMuPDF
 
 openai.api_type = "azure"
@@ -60,8 +61,8 @@ def get_prompt(usr_msg):
     print("slider_value", slider_value)
     pages = []
     usr_msg = embedding.remove_words(usr_msg, embedding.stop_words).lower()
-    if "page" in usr_msg:
-        page_nr = first_int_in_string(usr_msg.split("page")[-1])
+    if "page" in usr_msg or "sida" in usr_msg:
+        page_nr = first_int_in_string(re.split("page|sida", usr_msg)[-1])
         if page_nr != 0:
             pages.append(f"Page {page_nr}: {get_page_text(page_nr)}")
             nr_emb_pages -= 1
@@ -82,7 +83,6 @@ def first_int_in_string(string):
             return int(int_string)
     return int(int_string)
         
-
 def get_first_page():
     global filename
     doc = fitz.open(filename+".pdf")

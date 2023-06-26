@@ -19,6 +19,18 @@ stop_words = [
     "gives", "gave", "giving"
 ]
 
+stop_words += [
+    "en", "ett", "den", "det", "denna", "detta", "dessa", "de", "någon", "några", "varje",
+    "alla", "båda", "antingen", "varken", "sådan", "ingen", "inga", "få", "flera",
+    "många", "mycket", "mer", "mest", "mindre", "minst", "färre", "minst", "en annan",
+    "annan", "andra", "och", "men", "eller", "eller inte", "så", "än", "i", "på", "vid",
+    "av", "för", "till", "från", "med", "utan", "kan", "kunde", "får", "kunde",
+    "kommer", "skulle", "ska", "bör", "måste", "är", "är", "var", "var", "har",
+    "har", "hade", "gör", "gör", "gjorde", "vara", "varit", "varande", "få", "får", "fick",
+    "få", "gå", "går", "gick", "gå", "göra", "gör", "gjorde", "gör",
+    "ta", "tar", "tog", "tar", "komma", "kommer", "kom", "kommer", "ge",
+    "ger", "gav", "ger"
+]
 
 def remove_words(text: str, words: list[str]) -> str:
     """Remove words from a string."""
