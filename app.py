@@ -79,7 +79,7 @@ pages_to_str = lambda pages: delimiter.join(pages) + delimiter
     
 def first_int_in_string(string):
     int_string = ""
-    for i in range(len(string)-1):
+    for i in range(len(string)):
         if string[i].isdigit():
             int_string += string[i]
         elif int_string != "":
