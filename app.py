@@ -71,7 +71,7 @@ def get_prompt(usr_msg):
             pages.append(emb_pages[i])
         prompt = delimiter.join(pages) + delimiter
         print(pages)
-        prompt = helpmessage + delimiter.join(pages) + delimiter
+        prompt = delimiter.join(pages) + delimiter
     return prompt
     
 def first_int_in_string(string):
@@ -129,7 +129,6 @@ def send_message(event=None):
     global cats
     global conversation
     global openai
-    global helpmessage
     message = input_box.get()
     if message:
         input_box.delete(0, tk.END)
