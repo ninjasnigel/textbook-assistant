@@ -8,6 +8,17 @@ def clear_placeholder(event):
     if input_box.get() == 'Enter your message...':
         input_box.delete(0, 'end')
 
+def on_slider_change(value):
+    """Function to print the value of the slider to the console."""
+    global slider_value
+    slider_value = value.split(".")[0]
+    print(f"Slider is at: {slider_value}")
+
+def get_slider_value():
+    """Function to get the value of the slider."""
+    global slider_value
+    return slider_value
+
 def configure_window(window, browse_file):
     window_width = 600
     window_height = 600
@@ -19,12 +30,12 @@ def configure_window(window, browse_file):
 
     # Apply a theme
     style = ThemedStyle(window)
-    style.theme_use("yaru")  # Modern dark theme
-    style.configure("TEntry", padding=10)  # Increase the entry box padding
+    style.theme_use("yaru")
+    style.configure("TEntry", padding=10)
 
     # Define colors and styles
     window.configure(bg="#2d2d2d")
-    window.title('My Application') # Add a title to your window
+    window.title('My Application')
     window.option_add("*Font", "Arial 12")
     window.option_add("*TButton.font", "Arial 12")
     window.option_add("*Text.font", "Arial 12")
@@ -38,21 +49,22 @@ def configure_window(window, browse_file):
     browse_button.pack(pady=20)
 
     # Create a chat window using a text widget
-    chat_window = tk.Text(window, height=20, width=60, bg="#2d2d2d", fg="#f0f0f0", padx=10, pady=10)  # Added padding inside the widget
+    chat_window = tk.Text(window, height=20, width=60, bg="#2d2d2d", fg="#f0f0f0", padx=10, pady=10)
     chat_window.pack(padx=10, pady=10, expand=True, fill=tk.BOTH)
-    chat_window.tag_configure("user", foreground="#88c0d0")  # Blue user messages, right-aligned
-    chat_window.tag_configure("assistant", foreground="#a3be8c")  # Green assistant messages, left-aligned
-    chat_window.tag_configure("error", foreground="#ff0000")  # Bright red error messages
-
+    chat_window.tag_configure("user", foreground="#88c0d0")
+    chat_window.tag_configure("assistant", foreground="#a3be8c")
+    chat_window.tag_configure("error", foreground="#ff0000")
 
     # Create an input box in the chat window
     input_box = ttk.Entry(window)
-    input_box.pack(side=tk.BOTTOM, fill=tk.X, padx=20, pady=10)  # Added padding inside the widget
-    input_box.insert(0, 'Enter your message...')  # Placeholder text
-    input_box.bind("<FocusIn>", clear_placeholder)  # Bind the clear_placeholder function to focus event
+    input_box.pack(side=tk.BOTTOM, fill=tk.X, padx=20, pady=10)
+    input_box.insert(0, 'Enter your message...')
+    input_box.bind("<FocusIn>", clear_placeholder)
 
-    
-    
+    # Create a slider (Scale widget)
+    slider = ttk.Scale(window, from_=1, to=10, command=on_slider_change)
+    slider.pack(pady=10)
+
     # Example of text widget scrollbar configuration
     scrollbar = ttk.Scrollbar(chat_window)
     scrollbar.pack(side=tk.RIGHT, fill=tk.Y)

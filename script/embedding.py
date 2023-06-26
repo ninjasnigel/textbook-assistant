@@ -19,6 +19,7 @@ stop_words = [
     "gives", "gave", "giving"
 ]
 
+
 def remove_words(text: str, words: list[str]) -> str:
     """Remove words from a string."""
     return " ".join([word for word in text.split() if word not in words])
