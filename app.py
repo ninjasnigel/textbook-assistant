@@ -59,14 +59,15 @@ def num_tokens(text: str, model: str = GPT_MODEL_token) -> int:
 # Initialize a conversation
 delimiter = "####"
 conversation = [
-    {"role": "system", "content": "You are a helpful teacher that will assist and discuss with students regarding information from a given textbook. Your answer should be short and concise while still being informational. You will have context from a textbook the student is using. The questions will come after a delimiter (####)."},
+    {"role": "system", "content": "You are a helpful teacher that will assist and discuss with students regarding information from a given textbook. Your answer should be short and concise (100 tokens) while still being informational and purely based on content given by the user."},
     {"role": "assistant", "content": "Hello, I am a helpful teacher that will assist you with questions regarding information in a given textbook. Please browse your computer for a textbook to input and ask me anything related to it. :)"}
 ]
 # Print the first assistant message
 first_assistant_message = conversation[1]["content"]
 chat_window.insert(tk.END, f"Assistant: {first_assistant_message}\n", "assistant")  # Apply "assistant" tag to assistant message
 chat_window.yview_moveto(1.0)  # Scroll down to the latest content
-helpmessage = "Use the following pages from a textbook to discuss and answer the subsequent questions: \n"
+helpmessage = conversation[0]["content"] + " Use the following pages from a textbook to discuss and answer the subsequent questions: \n"
+print(helpmessage)
 
 def send_message(event=None):
     global df
@@ -86,11 +87,11 @@ def send_message(event=None):
             chat_window.insert(tk.END, "Error: Please load a file first before asking questions.\n", "error")
             chat_window.yview_moveto(1.0)  # Scroll down to the latest content
             return
-        prompt = helpmessage + ' ||| '.join(pages) + delimiter + message
+        prompt = helpmessage + ' ||| '.join(pages)
         chat_window.insert(tk.END, f"You: {message}\n", "user")  # Apply "user" tag to user message
         chat_window.yview_moveto(1.0)  # Scroll down to the latest content
 
-        conversation.append({"role": "user", "content": prompt})
+        conversation[0]=({"role": "system", "content": prompt})
 
         # Add user message to conversation
         token_budget: int = 8192 - 500  # Leave 500 tokens for the system message
