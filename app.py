@@ -66,7 +66,7 @@ def get_prompt(usr_msg):
         emb_pages, relatedness = embedding.strings_ranked_by_relatedness(usr_msg, df, top_n=nr_emb_pages)
         for i in range(len(emb_pages)):
             pages.append(emb_pages[i])
-        prompt = helpmessage + delimiter.join(pages) + delimiter + usr_msg
+        prompt = helpmessage + delimiter.join(pages) + delimiter
     return prompt
     
 def first_int_in_string(string):
@@ -112,15 +112,14 @@ def num_tokens(text: str, model: str = GPT_MODEL_token) -> int:
 # Initialize a conversation
 delimiter = "####"
 conversation = [
-    {"role": "system", "content": "You are a helpful teacher that will assist and discuss with students regarding information from a given textbook. Your answer should be short and concise (100 tokens) while still being informational and purely based on content given by the user."},
+    {"role": "system", "content": "You are a helpful teacher that will assist and discuss with students regarding information from a given textbook. Your answer should be short and concise while still being informational and purely based on content given by the user and your previous responses."},
     {"role": "assistant", "content": "Hello, I am a helpful teacher that will assist you with questions regarding information in a given textbook. Please browse your computer for a textbook to input and ask me anything related to it. :)"}
 ]
 # Print the first assistant message
 first_assistant_message = conversation[1]["content"]
 chat_window.insert(tk.END, f"Assistant: {first_assistant_message}\n", "assistant")  # Apply "assistant" tag to assistant message
 chat_window.yview_moveto(1.0)  # Scroll down to the latest content
-helpmessage = conversation[0]["content"] + " Use the following pages from a textbook to discuss and answer the subsequent questions: \n"
-print(helpmessage)
+helpmessage = conversation[0]["content"] + " Use the following pages from a textbook to discuss and answer questions."
 
 def send_message(event=None):
     global df
@@ -137,6 +136,9 @@ def send_message(event=None):
         chat_window.yview_moveto(1.0)  # Scroll down to the latest content
 
         conversation[0]=({"role": "system", "content": prompt})
+        print(conversation[0]["content"])
+
+        conversation.append({"role": "user", "content": message})
 
         # Add user message to conversation
         token_budget: int = 8192 - 500  # Leave 500 tokens for the system message
@@ -168,6 +170,7 @@ def send_message(event=None):
 
         # Add assistant message to conversation
         conversation.append({"role": "assistant", "content": assistant_reply})
+        
 
 
 # Bind the Enter key to the send_message function
