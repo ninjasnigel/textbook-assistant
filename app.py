@@ -8,6 +8,7 @@ from script.window_config import configure_window
 import os
 import openai
 import script.embedding as embedding
+from script.window_config import get_slider_value
 import ast
 import tiktoken
 import fitz  # PyMuPDF
@@ -24,7 +25,6 @@ with open('openai.key') as f:
     openai.api_key = f.read().strip()
 
 df = pd.DataFrame()
-
 
 filepath = ""
 cats = {}
@@ -54,7 +54,10 @@ def get_prompt(usr_msg):
     global df
     global cats
     global helpmessage
-    nr_emb_pages = 5
+    global slider_value
+    slider_value = int(get_slider_value())
+    nr_emb_pages = slider_value
+    print("slider_value", slider_value)
     pages = []
     usr_msg = embedding.remove_words(usr_msg, embedding.stop_words).lower()
     if "page" in usr_msg:
@@ -67,6 +70,8 @@ def get_prompt(usr_msg):
         for i in range(len(emb_pages)):
             pages.append(emb_pages[i])
         prompt = delimiter.join(pages) + delimiter
+        print(pages)
+        prompt = helpmessage + delimiter.join(pages) + delimiter
     return prompt
     
 def first_int_in_string(string):
