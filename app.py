@@ -1,18 +1,14 @@
-import tkinter as tk
-from tkinter import filedialog
 from PyPDF2 import PdfReader
 import pandas as pd
 from script.extraction import category_dict
-import tkinter as tk
-from script.window_config import configure_window
 import os
 import openai
 import script.embedding as embedding
-from script.window_config import get_slider_value
 import ast
 import tiktoken
 import re
 import fitz  # PyMuPDF
+import streamlit as st
 
 openai.api_type = "azure"
 openai.api_version = "2023-05-15"
@@ -32,42 +28,49 @@ cats = {}
 reader = None
 pages = []
 
+def get_pdf_pages(filepath):
+    return PdfReader(filepath).pages
+
 def browse_file():
     global df
     global reader
     global filepath
-    global filename
-    filepath = filedialog.askopenfilename()
-    filename = filepath.split("/")[-1].replace(".pdf", "")
-    reader = PdfReader(filename+".pdf").pages
-    if filepath and filepath[-1] == "f":
-        chat_window.insert(tk.END, f"Analyzing file: {filepath}...\n", "bold")
-        window.update()
-        df = embedding.get_embedding(filepath)
-        if not isinstance(df, pd.DataFrame):
-            df = embedding.create_embedding(filepath)
-        df['embedding'] = df['embedding'].apply(ast.literal_eval)
-        print("Embedding loaded")
-        window.update_idletasks()
-    else:
-        print("Not a PDF file")
+    global uploaded_file
+    uploaded_file = st.file_uploader("Upload a PDF file", type="pdf")
+    if uploaded_file:
+        filepath = os.path.join(os.getcwd(), uploaded_file.name)
+        with open(filepath, "wb") as f:
+            f.write(uploaded_file.read())
+        reader = get_pdf_pages(filepath)
+        if not reader:
+            st.write("Not a valid PDF file.")
+            return
+        if 'uploaded_file' not in st.session_state:
+            df = embedding.get_embedding(filepath)
+            if not isinstance(df, pd.DataFrame):
+                df = embedding.create_embedding(filepath)
+            df['embedding'] = df['embedding'].apply(ast.literal_eval)
+            st.session_state['uploaded_file'] = uploaded_file
+            
+
 
 def get_pages_str(usr_msg):
     global df
     global cats
-    global helpmessage
     global slider_value
     global pages
-    slider_value = int(get_slider_value())
+    global filepath
     nr_emb_pages = slider_value
     print("slider_value", slider_value)
     usr_msg = embedding.remove_words(usr_msg, embedding.stop_words).lower()
     if "page" in usr_msg or "sida" in usr_msg:
         page_nr = first_int_in_string(re.split("page|sida", usr_msg)[-1])
         if page_nr != 0:
-            pages.append(f"Page {page_nr}: {get_page_text(page_nr)}")
+            pages.append(f"Page {page_nr}: {get_page_text(page_nr,filepath)}")
             nr_emb_pages -= 1
+            print('wassup')
     if not df.empty:
+        print('wassup2')
         emb_pages, relatedness = embedding.strings_ranked_by_relatedness(usr_msg, df, top_n=nr_emb_pages)
         for i in range(len(emb_pages)):
             pages.append(emb_pages[i])
@@ -87,8 +90,7 @@ def first_int_in_string(string):
     if int_string: return int(int_string)
     else: return 0
         
-def get_first_page():
-    global filename
+def get_first_page(filename):
     doc = fitz.open(filename+".pdf")
     for item in doc.get_toc():
         if item[0] == 2:
@@ -98,17 +100,12 @@ def get_first_page():
 
 def get_page_text(page_nr, filepath=filepath):
     global reader
-    first_page = get_first_page()
+    filename = re.split(r'[/|\\]',filepath)[-1].replace(".pdf", "")
+    first_page = get_first_page(filename)
     # print(first_page, page_nr)
     page = reader[page_nr+first_page-2]
     # {page_nr}: {page.extract_text()}")
     return page.extract_text()
-
-window = tk.Tk()
-window.title("File Browser and Chat")
-
-# Configure the window using the imported function
-window, chat_window, input_box = configure_window(window,browse_file)
 
 # Get number of tokens in a string
 def num_tokens(text: str, model: str = GPT_MODEL_token) -> int:
@@ -147,36 +144,22 @@ def update_conversation(message):
 
     # Get new system message
     conversation[0]['content'] = system_msg + pages_str
-    print(conversation)
 
 # Print the first assistant message
 first_assistant_message = "Hello, I am a helpful teacher that will assist you with questions regarding information in a given textbook. Please browse your computer for a textbook to input and ask me anything related to it. :)"
-chat_window.insert(tk.END, f"Assistant: {first_assistant_message}\n", "assistant")  # Apply "assistant" tag to assistant message
-chat_window.yview_moveto(1.0)  # Scroll down to the latest content
 
-def send_message(event=None):
+def send_message(message):
     global df
     global cats
     global conversation
     global openai
     global pages
-    message = input_box.get()
     if message:
-        input_box.delete(0, tk.END)
-        window.update()
 
         update_conversation(message)
-
-        chat_window.insert(tk.END, f"You: {message}\n", "user")  # Apply "user" tag to user message
-        chat_window.yview_moveto(1.0)  # Scroll down to the latest content
         
         # Add user message to conversation
         conversation.append({"role": "user", "content": message})
-
-        # Print loading indicator
-        chat_window.insert(tk.END, "Assistant: Thinking...\n", "assistant")  # Apply "assistant" tag to assistant message
-        chat_window.yview_moveto(1.0)  # Scroll down to the latest content
-        chat_window.update()
 
         # Generate model response
         response = openai.ChatCompletion.create(
@@ -186,20 +169,33 @@ def send_message(event=None):
 
         # Get assistant's reply from the response
         assistant_reply = response['choices'][0]['message']['content']
+        st.write(assistant_reply)
 
-        # Remove loading indicator
-        chat_window.delete("end-2l linestart", tk.END)
-
-        chat_window.insert(tk.END, f"\nAssistant: {assistant_reply}\n", "assistant")  # Apply "assistant" tag to assistant message
-        chat_window.yview_moveto(1.0)  # Scroll down to the latest content
 
         # Add assistant message to conversation
         conversation.append({"role": "assistant", "content": assistant_reply})
-        
 
 
-# Bind the Enter key to the send_message function
-window.bind("<Return>", send_message)
+def app():
+    global slider_value
+    st.title("Your Friendly AI Textbook Assistant")
+    st.write(first_assistant_message)
 
-# Start the application
-window.mainloop()
+    browse_file()
+
+    if 'uploaded_file' in st.session_state:
+        # Define a variable with an initial value
+        initial_value = 5
+
+        # Add a slider widget to the Streamlit app
+        slider_value = st.slider("Select how many pages to fetch", min_value=1, max_value=10, value=initial_value)
+        message = st.text_input("Enter your message:")
+        print(message)
+       
+        if st.button("Send"):
+            send_message(message)
+    
+
+
+if __name__ == '__main__':
+    app()
