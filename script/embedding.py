@@ -67,13 +67,12 @@ def create_embedding(filepath):
     df.to_csv(f"data/{filename}.csv", index=False)
     return df
 
-def get_embedding(filepath):
+def get_embedding(filename):
     import ast
     import pandas as pd
+    import re
     from PyPDF2 import PdfReader
-    filename = filepath.split("/")[-1].replace(".pdf", "")
     try:
-        print(filepath)
         df = pd.read_csv(f"data/{filename}.csv")
         print("Embedding found")
         return df
