@@ -31,12 +31,9 @@ pages = []
 def get_pdf_pages(filepath):
     return PdfReader(filepath).pages
 
-def browse_file():
-    global df
+def browse_file(embedded,uploaded_file):
     global reader
     global filepath
-    global uploaded_file
-    uploaded_file = st.file_uploader("Upload a PDF file", type="pdf")
     if uploaded_file:
         filepath = os.path.join(os.getcwd(), uploaded_file.name)
         with open(filepath, "wb") as f:
@@ -45,19 +42,17 @@ def browse_file():
         if not reader:
             st.write("Not a valid PDF file.")
             return
-        if 'uploaded_file' not in st.session_state:
+        if not embedded:
             df = embedding.get_embedding(filepath)
             if not isinstance(df, pd.DataFrame):
                 df = embedding.create_embedding(filepath)
             df['embedding'] = df['embedding'].apply(ast.literal_eval)
-            st.session_state['uploaded_file'] = uploaded_file
-            
+            embedded = True
+    return embedded, df
 
 
-def get_pages_str(usr_msg):
-    global df
+def get_pages_str(usr_msg,slider_value,df):
     global cats
-    global slider_value
     global pages
     global filepath
     nr_emb_pages = slider_value
@@ -128,10 +123,10 @@ conversation = [
 ]
 
 
-def update_conversation(message):
+def update_conversation(message,slider_value,df):
     global conversation
     global pages
-    get_pages_str(message)
+    get_pages_str(message,slider_value,df)
     if pages: pages_str = pages_to_str(pages)
     token_budget: int = 8192 - 500  # Leave 500 tokens for the system message
     total_msg = " ".join([entry["content"] for entry in conversation[1:]]) + pages_str + system_msg
@@ -148,15 +143,14 @@ def update_conversation(message):
 # Print the first assistant message
 first_assistant_message = "Hello, I am a helpful teacher that will assist you with questions regarding information in a given textbook. Please browse your computer for a textbook to input and ask me anything related to it. :)"
 
-def send_message(message):
-    global df
+def send_message(message,slider_value,df):
     global cats
     global conversation
     global openai
     global pages
     if message:
 
-        update_conversation(message)
+        update_conversation(message,slider_value,df)
         
         # Add user message to conversation
         conversation.append({"role": "user", "content": message})
@@ -169,33 +163,14 @@ def send_message(message):
 
         # Get assistant's reply from the response
         assistant_reply = response['choices'][0]['message']['content']
-        st.write(assistant_reply)
-
 
         # Add assistant message to conversation
         conversation.append({"role": "assistant", "content": assistant_reply})
+        print(conversation)
+        return conversation
 
-
-def app():
-    global slider_value
-    st.title("Your Friendly AI Textbook Assistant")
-    st.write(first_assistant_message)
-
-    browse_file()
-
-    if 'uploaded_file' in st.session_state:
-        # Define a variable with an initial value
-        initial_value = 5
-
-        # Add a slider widget to the Streamlit app
-        slider_value = st.slider("Select how many pages to fetch", min_value=1, max_value=10, value=initial_value)
-        message = st.text_input("Enter your message:")
-        print(message)
-       
-        if st.button("Send"):
-            send_message(message)
     
 
 
-if __name__ == '__main__':
-    app()
+
+
