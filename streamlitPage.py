@@ -1,6 +1,8 @@
 import streamlit as st
 
 from app import *
+from page_texts import *
+
 
 if 'embedded' not in st.session_state:
     st.session_state['embedded'] = False
@@ -10,13 +12,16 @@ def streamlit_app():
     global embedded
     global df
     
-    st.title("Your AI Textbook Assistant")
-    st.write(first_assistant_message)
+
+    st.title("EduChat: Your AI Textbook Assistant")
+    st.write(welcome_string)
     
     print('yo')
     uploaded_file = st.file_uploader("Upload a PDF file", type="pdf")
     if uploaded_file and 'df' not in st.session_state:
-        embedded, df = browse_file(embedded, uploaded_file)
+        with st.spinner("Processing..."):
+            embedded, df = browse_file(embedded, uploaded_file)
+        st.success("Done!")
         st.session_state['df'] = df
         st.session_state['embedded'] = embedded
 

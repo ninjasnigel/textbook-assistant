@@ -46,7 +46,6 @@ def browse_file(embedded,uploaded_file):
             df = embedding.get_embedding(filepath)
             if not isinstance(df, pd.DataFrame):
                 df = embedding.create_embedding(filepath)
-            #df['embedding'] = df['embedding'].apply(ast.literal_eval)
             embedded = True
     return embedded, df
 

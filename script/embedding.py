@@ -54,15 +54,22 @@ def create_embedding(filepath):
     BATCH_SIZE = 1
 
     embeddings = []
-    for batch_start in range(0, len(pages), BATCH_SIZE):
+    batch_start = 0
+    while batch_start < len(pages):
         batch_end = batch_start + BATCH_SIZE
         batch = pages[batch_start:batch_end]
         print(f"Batch {batch_start} to {batch_end-1}")
-        response = openai.Embedding.create(model=EMBEDDING_MODEL, input=batch, deployment_id=EMBEDDING_MODEL)
-        for i, be in enumerate(response["data"]):
-            assert i == be["index"]  # double check embeddings are in same order as input
-        batch_embeddings = [e["embedding"] for e in response["data"]]
-        embeddings.extend(batch_embeddings)
+        try:
+            response = openai.Embedding.create(model=EMBEDDING_MODEL, input=batch, deployment_id=EMBEDDING_MODEL)
+            for i, be in enumerate(response["data"]):
+                assert i == be["index"]  # double check embeddings are in same order as input
+                
+            batch_embeddings = [e["embedding"] for e in response["data"]]
+            embeddings.extend(batch_embeddings)
+            batch_start += 1
+        except Exception as e:
+            print(str(e))
+        
 
     df = pd.DataFrame({"text": pages, "embedding": embeddings})
     df.to_csv(f"data/{filename}.csv", index=False)
@@ -76,6 +83,7 @@ def get_embedding(filepath):
     filename = re.split(r'[/|\\]',filepath)[-1].replace(".pdf", "")
     try:
         df = pd.read_csv(f"data/{filename}.csv")
+        df['embedding'] = df['embedding'].apply(ast.literal_eval)
         print("Embedding found")
         return df
     except FileNotFoundError as e:
