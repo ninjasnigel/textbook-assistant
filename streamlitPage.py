@@ -23,6 +23,7 @@ def streamlit_app():
     # Initialize chat history
     if "messages" not in st.session_state:
         st.session_state.messages = []
+
     if embedded:
         initial_value = 5
         slider_value = st.slider("Select how many pages to fetch", min_value=1, max_value=10, value=initial_value)
@@ -31,8 +32,6 @@ def streamlit_app():
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
-
-
 
     if embedded:
         message = st.chat_input("Enter your message:", key="message_input")

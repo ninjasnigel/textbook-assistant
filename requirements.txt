@@ -5,4 +5,3 @@ PyPDF2==3.0.1
 scipy==1.11.1
 streamlit==1.24.0
 tiktoken==0.4.0
-ttkthemes==3.2.2
