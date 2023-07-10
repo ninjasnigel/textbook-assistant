@@ -63,7 +63,7 @@ def get_pages_str(usr_msg,slider_value,df):
         if page_nr != 0:
             pages.append(f"Page {page_nr}: {get_page_text(page_nr,filepath)}")
             nr_emb_pages -= 1
-            print('wassup')
+            print('wassup',page_nr)
     if not df.empty:
         print('wassup2')
         emb_pages, relatedness = embedding.strings_ranked_by_relatedness(usr_msg, df, top_n=nr_emb_pages)
@@ -139,6 +139,7 @@ def update_conversation(message,slider_value,df):
 
     # Get new system message
     conversation[0]['content'] = system_msg + pages_str
+    print('SYSTEM',conversation[0])
 
 # Print the first assistant message
 first_assistant_message = "Hello, I am a helpful teacher that will assist you with questions regarding information in a given textbook. Please browse your computer for a textbook to input and ask me anything related to it. :)"
@@ -166,8 +167,7 @@ def send_message(message,slider_value,df):
 
         # Add assistant message to conversation
         conversation.append({"role": "assistant", "content": assistant_reply})
-        print(conversation)
-        return conversation
+        return assistant_reply
 
     
 
