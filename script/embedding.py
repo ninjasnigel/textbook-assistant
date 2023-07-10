@@ -36,11 +36,16 @@ def remove_words(text: str, words: list[str]) -> str:
     """Remove words from a string."""
     return " ".join([word for word in text.split() if word not in words])
 
-with(open('openai.key')) as f:
-    openai.api_key = f.read().strip()
+try:
+    with open('openai.base') as f:
+        openai.api_base = f.read().strip()
 
-with(open('openai.base')) as f:
-    openai.api_base = f.read().strip()
+    with open('openai.key') as f:
+        openai.api_key = f.read().strip()
+except: # Use streamlit secrets
+    import streamlit as st
+    openai.api_key = st.secrets["openai_key"]
+    openai.api_base = st.secrets["openai_base"]
 
 def create_embedding(filepath):
     #Note: The openai-python library support for Azure OpenAI is in preview.

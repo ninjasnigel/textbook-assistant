@@ -15,11 +15,16 @@ openai.api_version = "2023-05-15"
 GPT_MODEL_token = "gpt-3.5-turbo"
 GPT_MODEL = "gpt-35-turbo"
 
-with open('openai.base') as f:
-    openai.api_base = f.read().strip()
+try:
+    with open('openai.base') as f:
+        openai.api_base = f.read().strip()
 
-with open('openai.key') as f:
-    openai.api_key = f.read().strip()
+    with open('openai.key') as f:
+        openai.api_key = f.read().strip()
+except: # Use streamlit secrets
+    import streamlit as st
+    openai.api_key = st.secrets["openai_key"]
+    openai.api_base = st.secrets["openai_base"]
 
 df = pd.DataFrame()
 
