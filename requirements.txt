@@ -1,7 +1,8 @@
 openai==0.27.8
-pandas==1.5.3
+pandas==1.5.2
 PyMuPDF==1.22.5
 PyPDF2==3.0.1
-scipy==1.11.1
+scipy==1.9.1
 streamlit==1.24.0
 tiktoken==0.4.0
+fitz
