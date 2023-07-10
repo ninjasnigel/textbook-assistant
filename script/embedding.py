@@ -44,8 +44,9 @@ with(open('openai.base')) as f:
 
 def create_embedding(filepath):
     #Note: The openai-python library support for Azure OpenAI is in preview.
+    import re
     from PyPDF2 import PdfReader
-    filename = filepath.split("/")[-1].replace(".pdf", "")
+    filename = re.split(r'[/|\\]',filepath)[-1].replace(".pdf", "")
     reader = PdfReader(filename+".pdf")
     number_of_pages = len(reader.pages)
     pages = [page.extract_text() for page in reader.pages]
@@ -70,10 +71,10 @@ def create_embedding(filepath):
 def get_embedding(filepath):
     import ast
     import pandas as pd
+    import re
     from PyPDF2 import PdfReader
-    filename = filepath.split("/")[-1].replace(".pdf", "")
+    filename = re.split(r'[/|\\]',filepath)[-1].replace(".pdf", "")
     try:
-        print(filepath)
         df = pd.read_csv(f"data/{filename}.csv")
         print("Embedding found")
         return df
